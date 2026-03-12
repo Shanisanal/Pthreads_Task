@@ -18,6 +18,7 @@
 #include <mqueue.h>
 #include <semaphore.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 //******************************* Global Types ******************************** 
  
