@@ -19,15 +19,23 @@
 #include <semaphore.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include "PossixHandler.h"
 
 //******************************* Global Types ******************************** 
  
 //***************************** Global Constants ****************************** 
+#define USER_INPUT_THREAD_NAME      "INPUT_DATA_THREAD"
+#define DATA_FORMAT_THREAD_NAME     "DATA_FORMAT_THREAD"
+#define DATA_LOG_THREAD_NAME        "DATE_LOG_THREAD"
 
 //***************************** Global Variables ****************************** 
-pthread_t ulUserInputThread = 0;
-pthread_t ulFormatInputThread = 0;
-pthread_t ulLogThread = 0;
+extern pthread_t gulUserInputThread ;
+extern pthread_t gulFormatInputThread ;
+extern pthread_t gulLogThread ;
 
 //**************************** Forward Declarations *************************** 
 
