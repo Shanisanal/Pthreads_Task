@@ -10,7 +10,7 @@ INC_DIR = Include
 RELEASE_DIR = release
 
 # Source files
-SRCS = main.c Source/PossixHandler.c 
+SRCS = main.c Source/PossixHandler.c Source/ThreadHandler.c
 
 # Flatten object names
 OBJS_RELEASE = $(addprefix $(RELEASE_DIR)/, $(notdir $(SRCS:.c=.o)))
