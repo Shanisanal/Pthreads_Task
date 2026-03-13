@@ -23,7 +23,7 @@
 
 //**************************** Forward Declarations *************************** 
 bool ExecuteThreads(void);
-bool CreateMessageQueue (void)
+bool CreateMessageQueue (void);
 
 //*********************** Inline Method Implementations *********************** 
 
