@@ -24,6 +24,8 @@
 //**************************** Forward Declarations *************************** 
 bool ExecuteThreads(void);
 bool CreateMessageQueue (void);
+void* InputThreadHandler(void* pvarguments);
+void* FormatThreadHandler(void* pvarguments);
 
 //*********************** Inline Method Implementations *********************** 
 
