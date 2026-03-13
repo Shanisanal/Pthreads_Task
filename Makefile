@@ -2,7 +2,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -O2 -I$(INC_DIR) -D_REENTRANT
 DEBUGFLAGS = -Wall -Wextra -g
-LDFLAGS = -lpthread -lrt
+LDFLAGS = -lpthread -lrt -lm
 
 # Project structure
 SRC_DIR = Source
