@@ -22,8 +22,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "PossixHandler.h"
+#include "ThreadHandler.h"
 
 //******************************* Global Types ******************************** 
  
@@ -32,15 +34,36 @@
 #define DATA_FORMAT_THREAD_NAME     "DATA_FORMAT_THREAD"
 #define DATA_LOG_THREAD_NAME        "DATE_LOG_THREAD"
 
+#define PRIORITY_NORMAL         0
+#define PRIORITY_URGENT         10
+#define PRIORITY_EMERGENCY      99
+
 //***************************** Global Variables ****************************** 
 extern pthread_t gulUserInputThread ;
 extern pthread_t gulFormatInputThread ;
 extern pthread_t gulLogThread ;
 
+ typedef struct _MESSAGE_
+ { 
+    uint16_t  unInputData; 
+    float     fLogValue; 
+    int32_t   lTimeStamp; 
+} MESSAGE; 
+
+typedef enum 
+{
+    THREAD_SUCCESS      = 0,
+    ERR_INPUT_THREAD    = (1 << 0), 
+    ERR_FORMAT_THREAD   = (1 << 1), 
+    ERR_LOG_THREAD      = (1 << 2)  
+} THREAD_ERROR_MASK;
+
+
+
 //**************************** Forward Declarations *************************** 
 
 //*********************** Inline Method Implementations *********************** 
 
-#endif
+#endif  /*COMMON_H */
 
 // EOF 
