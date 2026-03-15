@@ -56,3 +56,7 @@ dkms.conf
 
 # Release folder
 release/
+
+# Configuration ignore
+.vscode
+
