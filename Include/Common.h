@@ -23,9 +23,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
-
-#include "PossixHandler.h"
-#include "ThreadHandler.h"
+#include <unistd.h>
 
 //******************************* Global Types ******************************** 
  
@@ -57,8 +55,6 @@ typedef enum
     ERR_FORMAT_THREAD   = (1 << 1), 
     ERR_LOG_THREAD      = (1 << 2)  
 } THREAD_ERROR_MASK;
-
-
 
 //**************************** Forward Declarations *************************** 
 
