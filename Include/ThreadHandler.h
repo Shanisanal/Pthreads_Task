@@ -14,6 +14,8 @@
 #define THREADHANDLER_H
 
 //******************************* Include Files ******************************* 
+#include "Common.h"
+#include "PossixHandler.h"
 
 //******************************* Global Types ******************************** 
  
@@ -24,8 +26,12 @@
 //**************************** Forward Declarations *************************** 
 bool ExecuteThreads(void);
 bool CreateMessageQueue (void);
+void PrintDisplayTable(void);
 void* InputThreadHandler(void* pvarguments);
 void* FormatThreadHandler(void* pvarguments);
+void AppendDataToLog(MESSAGE* pstIncoming);
+void PrintLogFileHeader(void);
+void* LogThreadHandler(void* pArguments);
 
 //*********************** Inline Method Implementations *********************** 
 
