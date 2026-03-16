@@ -60,3 +60,7 @@ release/
 # Configuration ignore
 .vscode
 
+# Ignore text files
+*.txt
+
+
