@@ -4,8 +4,9 @@
 //*****************************************************************************
 //
 // File     : Common.h
-// Summary  : 
-// Note     :  
+// Summary  : Contains Centralized definitions, shared structures, and global 
+//            declarations
+// Note     : None
 // Author   : Shani 
 // Date     : Mar 12, 2026 
 //
@@ -33,8 +34,6 @@
 #define DATA_LOG_THREAD_NAME        "DATE_LOG_THREAD"
 
 #define PRIORITY_NORMAL         0
-#define PRIORITY_URGENT         10
-#define PRIORITY_EMERGENCY      99
 
 //***************************** Global Variables ****************************** 
 extern pthread_t gulUserInputThread ;
