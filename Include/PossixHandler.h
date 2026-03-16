@@ -19,6 +19,7 @@
 
 #include "Common.h"
 #include "ThreadHandler.h"
+#include "PthreadCore.h"
 
 //******************************* Global Types ******************************** 
  
@@ -28,8 +29,6 @@
 
 //**************************** Forward Declarations *************************** 
 int CreateThreads (void);
-bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*pRoutine)(void*), 
-                               void* pArguments, const char* pcThreadName);
 void SynchronizeThreads(void);
 
 //*********************** Inline Method Implementations *********************** 
