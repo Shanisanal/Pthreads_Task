@@ -85,7 +85,7 @@ bool CreateMessageQueue (void)
     
     if (MSG_QUEUE_ERR == qInputToFormat) 
     {
-        printf("Failed to create InputToFormat Queue");
+        printf("Failed to create InputToFormat Queue\n\r");
         blQueueStatus =  false;
     }
 
@@ -96,7 +96,7 @@ bool CreateMessageQueue (void)
         
         if(MSG_QUEUE_ERR == qFormatToLog)
         {
-            printf("Failed to create FormatToLog Queue");
+            printf("Failed to create FormatToLog Queue\n\r");
             mq_close(qInputToFormat);
             blQueueStatus = false;
         }
