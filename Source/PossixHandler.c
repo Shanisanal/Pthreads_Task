@@ -17,7 +17,6 @@
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
-#define SUCCESS_RETURN         0
 
 //***************************** Local Variables ******************************* 
 pthread_t gulUserInputThread = 0; 
@@ -55,45 +54,6 @@ int CreateThreads (void)
     }
 
     return lReturn;
-}
-//************************* POSSIXHandlerCreateThread.**************************
-//Purpose   : Wrapper to create a POSSIX thread
-//Inputs    : pulThread - pointer to the thread ID variable
-//            routine - address of thread function
-//            pvarguments - arguments to pass to the routine
-//            pcThreadName - name of the thread
-//Outputs   : None
-//Return    : true - Thread created, false - thread creation failed
-//Notes     : None
-//*****************************************************************************
-bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*pRoutine)(void*), 
-                               void* pArguments, const char* pcThreadName)
-{
-    bool blReturn = true;
-
-    if((pulThread == NULL) || (pRoutine == NULL))
-    {
-        blReturn = false;
-    }
-
-    if(blReturn == true)
-    {
-        if(pthread_create(pulThread, NULL, pRoutine, pArguments) == SUCCESS_RETURN)
-        {
-            printf(" %s Created Successfully  \r\n",pcThreadName);
-        }
-        else
-        {
-            blReturn = false;
-            printf("ERROR: %s Creation failed\r\n",pcThreadName);
-        }
-    }
-    else
-    {
-        printf("ERROR: Invalid parameters in %s creation\r\n",pcThreadName);
-    }
-
-    return blReturn;
 }
 //*************************** SynchronizeThreads *******************************
 //Purpose   : Blocks the main process until all operational threads complete.
