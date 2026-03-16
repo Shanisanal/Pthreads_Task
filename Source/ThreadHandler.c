@@ -18,6 +18,7 @@
  
 //***************************** Local Constants ******************************* 
 #define BUFFER_SIZE         256
+#define TIME_BUFFER_SIZE    26
 #define DECIMAL_BASE        10
 #define MIN_INPUT_VAL       1
 #define MAX_INPUT_VAL       65535
@@ -54,10 +55,6 @@ bool ExecuteThreads(void)
             blStatus = false;
         }
     }
-    else
-    {
-        /* blStatus already set to false */
-    }
 
     return blStatus;
 }
@@ -79,7 +76,7 @@ bool CreateMessageQueue (void)
     stMessageAttr.mq_maxmsg = MAX_MSG_QUEUE;
     stMessageAttr.mq_msgsize = sizeof(MESSAGE*);
 
-    /* 1. Open/Create the Input to Format Queue */
+    /*Open/Create the Input to Format Queue */
     qInputToFormat = mq_open(INPUT_QUEUE_NAME, O_CREAT | O_RDWR, 
                                     QUEUE_PERMISSIONS, &stMessageAttr);
     
@@ -115,7 +112,7 @@ bool CreateMessageQueue (void)
 bool ValidateUserInput(uint8_t* pucBuffer, long* plInputValue)
 {
     bool blStatus = true;
-    uint8_t* pucEndPtr = NULL;
+    char* pcEndPtr = NULL;
 
     if(pucBuffer == NULL || plInputValue == NULL)
     {
@@ -124,9 +121,9 @@ bool ValidateUserInput(uint8_t* pucBuffer, long* plInputValue)
 
     if(blStatus == true)
     {
-        *plInputValue = strtol((char*)pucBuffer,(char**)&pucEndPtr, DECIMAL_BASE);
+        *plInputValue = strtol((char*)pucBuffer,&pcEndPtr, DECIMAL_BASE);
 
-        if(*plInputValue == '\0' && *plInputValue == '\n')
+        if(pcEndPtr == (char*)pucBuffer)
         {
             blStatus = false;
         }
@@ -143,7 +140,7 @@ bool ValidateUserInput(uint8_t* pucBuffer, long* plInputValue)
 //Inputs    : lValidInput - The validated integer from user input
 //Outputs   : None
 //Return    : void
-//Notes     : memory is freed by the receiving thread (FormatThread).
+//Notes     : memory is freed by the receiving thread in formatThread.
 //******************************************************************************
 void PostInputToQueue(long lValidInput)
 {
@@ -165,10 +162,6 @@ void PostInputToQueue(long lValidInput)
             free(pstMessageToFormat);
             pstMessageToFormat = NULL;
         }
-        else
-        {
-            // Send to Format successful
-        }
     }
 }
 
@@ -181,7 +174,6 @@ void PostInputToQueue(long lValidInput)
 //******************************************************************************
 void PrintDisplayTable(void)
 {
-    // Print the Table Header once
     printf("\n%s\n", "========================================================");
     printf("%-10s | %-15s | %-25s\n", "RAW VALUE", "LOG10 SCALE", "TIMESTAMP");
     printf("%s\n", "----------------------------------------------------------");
@@ -194,35 +186,31 @@ void PrintDisplayTable(void)
 //Return    : NULL
 //Notes     : None
 //******************************************************************************
-void* InputThreadHandler(void* pvarguments)
+void* InputThreadHandler(void* pArguments)
 {
-    (void)pvarguments; 
+    (void)pArguments; 
     uint8_t ucBuffer[BUFFER_SIZE] = {0};
     long lInputValue = 0;
     bool blReturnStatus = false;
-
     printf("[%s] Started. Enter numbers between 0 and 65536\n", USER_INPUT_THREAD_NAME);
 
     while (1)
     {
-        printf(">> ");
-
         if (fgets((char*)ucBuffer, sizeof(ucBuffer), stdin) != NULL)
         {
             ucBuffer[strcspn((char*)ucBuffer, "\n")] = 0;
 
-            if (strcmp((char*)ucBuffer, "exit") == 0) break;
-
             blReturnStatus = ValidateUserInput(ucBuffer,&lInputValue);
-            if(blReturnStatus == true)
+            
+            if(true == blReturnStatus)
             {
                 printf("Valid input: %ld. Sending to pipeline...\n", lInputValue);
                 PostInputToQueue(lInputValue);
             }
-        }
-        else
-        {
-            continue;
+            else
+            {
+                printf("Invalid Input ,Enter numbers between 0 and 65536\n");
+            }
         }
     }
     return NULL;
@@ -240,7 +228,8 @@ void* FormatThreadHandler(void* pArguments)
     (void)pArguments;
     MESSAGE* pstIncoming = NULL;
     uint32_t ulPriority = 0;
-    char cTimeBuffer[26]; 
+    char cTimeBuffer[TIME_BUFFER_SIZE] = {0}; 
+    struct tm stTimeInfo = {0};
     time_t lActualTime = 0;
 
     printf("[%s] Started.\n", DATA_FORMAT_THREAD_NAME);
@@ -253,11 +242,11 @@ void* FormatThreadHandler(void* pArguments)
             if (pstIncoming != NULL)
             {
                 PrintDisplayTable();
-
                 lActualTime = (time_t)pstIncoming->lTimeStamp;
-                ctime_r(&lActualTime,cTimeBuffer);
+                localtime_r(&lActualTime, &stTimeInfo);;
 
-                cTimeBuffer[strcspn(cTimeBuffer, "\n")] = 0;
+                strftime(cTimeBuffer, sizeof(cTimeBuffer), "%Y-%m-%d %H:%M:%S", 
+                                                                &stTimeInfo);
                 printf("%-10u | %-15.4f | %-25s\n", pstIncoming->unInputData, 
                         pstIncoming->fLogValue, cTimeBuffer);
 
@@ -267,10 +256,6 @@ void* FormatThreadHandler(void* pArguments)
                     printf("mq_send to Log failed\n");
                     free(pstIncoming);
                     pstIncoming = NULL;
-                }
-                else
-                {
-                    // Send to Log successful
                 }
             }
         }
@@ -293,7 +278,6 @@ void PrintLogFileHeader(void)
 {
     FILE* pstLogFile = NULL;
 
-    // access() returns 0 if the file exists
     if (access(LOG_TXT_FILE_NAME, F_OK) != 0)
     {
         // File does NOT exist, so create it and write the header
@@ -301,21 +285,22 @@ void PrintLogFileHeader(void)
 
         if (pstLogFile != NULL)
         {
-            fprintf(pstLogFile, "===============================================\n");
-            fprintf(pstLogFile, "%-10s | %-15s | %-25s\n", "RAW VALUE", "LOG10 SCALE", "TIMESTAMP");
-            fprintf(pstLogFile, "-----------------------------------------------\n");
+            fprintf(pstLogFile, "===========================================\n");
+            fprintf(pstLogFile, "%-10s | %-15s | %-25s\n", 
+                                        "RAW VALUE", "LOG10 SCALE", "TIMESTAMP");
+            fprintf(pstLogFile, "-------------------------------------------\n");
             fclose(pstLogFile);
             printf("[%s] New log file created.\n", DATA_LOG_THREAD_NAME);
         }
         else
         {
-            perror("Error: Could not create log file");
+            printf("Error: Could not create log file\n\r");
         }
     }
     else
     {
-        // File already exists, do nothing or log a message
-        printf("[%s] Log file already exists. Appending to existing data.\n", DATA_LOG_THREAD_NAME);
+        printf("[%s] Log file already exists. Appending to existing data.\n", 
+                                            DATA_LOG_THREAD_NAME);
     }
 }
 
@@ -329,7 +314,7 @@ void PrintLogFileHeader(void)
 void AppendDataToLog(MESSAGE* pstIncoming)
 {
     FILE* pstLogFile = NULL;
-    char cTimeBuffer[26];
+    char cTimeBuffer[TIME_BUFFER_SIZE] = {0};
     time_t lActualTime = 0;
 
     if (pstIncoming != NULL)
@@ -351,7 +336,7 @@ void AppendDataToLog(MESSAGE* pstIncoming)
         }
         else
         {
-            perror("Failed to open log file for appending");
+            printf("Failed to open log file for appending\n\r");
         }
     }
 }
