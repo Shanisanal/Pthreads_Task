@@ -4,8 +4,8 @@
 //*****************************************************************************
 //
 // File     : PossixHandler.h
-// Summary  : 
-// Note     : 
+// Summary  : Contains function declaration from PossixHandler.C
+// Note     : None
 // Author   : Shani 
 // Date     : Mar 12, 2026 
 //
@@ -17,6 +17,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "Common.h"
+#include "ThreadHandler.h"
+
 //******************************* Global Types ******************************** 
  
 //***************************** Global Constants ****************************** 
@@ -25,8 +28,9 @@
 
 //**************************** Forward Declarations *************************** 
 int CreateThreads (void);
-bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*routine)(void*), 
-                               void* pvarguments, const char* pcThreadName);
+bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*pRoutine)(void*), 
+                               void* pArguments, const char* pcThreadName);
+void SynchronizeThreads(void);
 
 //*********************** Inline Method Implementations *********************** 
 
