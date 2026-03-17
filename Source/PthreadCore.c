@@ -17,7 +17,6 @@
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
-#define SUCCESS_RETURN         0
 
 //***************************** Local Variables ******************************* 
 
@@ -88,3 +87,65 @@ bool POSSIXSynchronizeThreads(pthread_t ulThread, const char* pcThreadName)
     
     return blReturn;
 }
+
+
+//***************************** FindMessageQueue *******************************
+//Purpose   : Checks if a POSIX message queue exists in the kernel.
+//Inputs    : pcQueuename - The string name of the queue to search for
+//Outputs   : None
+//Return    : true if the queue is found, false otherwise
+//Notes     : Attempts to open in O_RDONLY mode and closes the handle immediately.
+//******************************************************************************
+bool FindMessageQueue(const char* pcQueuename)
+{
+    bool blStatus = true;
+    mqd_t lTempQueue = 0;
+
+    lTempQueue = mq_open(pcQueuename,O_RDONLY);
+
+    if(lTempQueue != MSG_QUEUE_ERR)
+    {
+        mq_close(lTempQueue);
+    }
+    else
+    {
+        blStatus = false;
+        printf(" %s does not exist.\r\n", pcQueuename);
+    }
+
+    return blStatus;
+
+}
+
+//***************************** RemoveMessageQueue *****************************
+//Purpose   : Deletes a message queue from the system if it exists
+//Inputs    : pcQueuename - The string name of the queue
+//Outputs   : None
+//Return    : true if queue was found and removed, false if it didn't exist
+//Notes     : None
+//******************************************************************************
+bool RemoveMessageQueue(const char* pcQueuename)
+{
+    bool blStatus = true;
+    int lReturnStatus = 0;
+
+    blStatus = FindMessageQueue(pcQueuename) ;
+
+    if(true == blStatus)
+    {
+        lReturnStatus = mq_unlink(pcQueuename);
+
+        if(lReturnStatus != MSG_QUEUE_ERR)
+        {
+            printf(" %s removed successfully.\r\n", pcQueuename);
+        }
+        else
+        {
+            printf("ERROR: Failed to unlink %s.\r\n", pcQueuename);
+            blStatus = false;
+        }
+    }
+
+    return blStatus;
+}
+
