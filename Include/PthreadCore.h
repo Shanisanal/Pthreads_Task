@@ -29,7 +29,8 @@
 bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*pRoutine)(void*), 
                                void* pArguments, const char* pcThreadName);
 bool POSSIXSynchronizeThreads(pthread_t ulThread, const char* pcThreadName);
-
+bool FindMessageQueue(const char* pcQueuename);
+bool RemoveMessageQueue(const char* pcQueuename);
 //*********************** Inline Method Implementations *********************** 
 
 #endif  /*PTHREADCORE_H */
