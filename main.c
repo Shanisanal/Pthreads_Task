@@ -43,10 +43,6 @@ int main()
         printf("Critical Error: Thread execution failed.\n");
         lReturnCode = 1; 
     }
-    else
-    {
-        SynchronizeThreads();
-    }
 
     return lReturnCode; 
 }
