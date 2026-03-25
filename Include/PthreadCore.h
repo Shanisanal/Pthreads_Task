@@ -20,17 +20,24 @@
 #include "Common.h"
 
 //******************************* Global Types ******************************** 
- 
+
 //***************************** Global Constants ****************************** 
 
 //***************************** Global Variables ****************************** 
 
 //**************************** Forward Declarations *************************** 
-bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*pRoutine)(void*), 
-                               void* pArguments, const char* pcThreadName);
-bool POSSIXSynchronizeThreads(pthread_t ulThread, const char* pcThreadName);
-bool FindMessageQueue(const char* pcQueuename);
-bool RemoveMessageQueue(const char* pcQueuename);
+bool PthreadCoreCreateThread(const THREAD_CONFIG* pstThreadConfig);
+bool PthreadCoreSynchronizeThreads(const THREAD_CONFIG* pstThreadConfig);
+mqd_t PthreadCoreOpenQueue(const char* pcQueueName, int lFlags, 
+                            const uint32_t ulPermission, struct mq_attr* pstAttr);
+bool PthreadCoreMessageSend(mqd_t lQueueDescriptor, const void* pMessage, 
+                      uint32_t ulSize, uint32_t ulPriority);
+bool PthreadCoreMessageReceive(mqd_t lQueueDescriptor,void* pMessage, 
+                        uint32_t ulSize, uint32_t* pulPriority);
+bool PthreadCoreSemInit(const SEM_CREATE* pstSem);
+bool PthreadCoreSemPost(sem_t* pSemId);
+bool PthreadCoreSemWait(sem_t* pSemId);
+
 //*********************** Inline Method Implementations *********************** 
 
 #endif  /*PTHREADCORE_H */
