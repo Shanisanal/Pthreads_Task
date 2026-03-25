@@ -15,7 +15,7 @@
 
 //******************************* Include Files ******************************* 
 #include "Common.h"
-#include "PossixHandler.h"
+#include "PosixHandler.h"
 
 //******************************* Global Types ******************************** 
  
@@ -24,14 +24,10 @@
 //***************************** Global Variables ****************************** 
 
 //**************************** Forward Declarations *************************** 
-bool ExecuteThreads(void);
-bool CreateMessageQueue (void);
-void PrintDisplayTable(void);
-void* InputThreadHandler(void* pvarguments);
-void* FormatThreadHandler(void* pvarguments);
-void AppendDataToLog(MESSAGE* pstIncoming);
-void PrintLogFileHeader(void);
-void* LogThreadHandler(void* pArguments);
+bool ThreadHandlerRun(void);
+void* ThreadHandlerUserInput(void* pvarguments);
+void* ThreadHandlerFormatInput(void* pvarguments);
+void* ThreadHandlerLogData(void* pArguments);
 
 //*********************** Inline Method Implementations *********************** 
 
