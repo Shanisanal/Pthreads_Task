@@ -22,130 +22,283 @@
 
 //****************************** Local Functions ****************************** 
 
-//************************* POSSIXHandlerCreateThread.**************************
-//Purpose   : Wrapper to create a POSSIX thread
-//Inputs    : pulThread - pointer to the thread ID variable
-//            routine - address of thread function
-//            pvarguments - arguments to pass to the routine
-//            pcThreadName - name of the thread
+//************************* PthreadCoreCreateThread.***************************
+//Purpose   : Create POSSIX thread
+//Inputs    : pstThreadConfig - pointer to the thread config structure
 //Outputs   : None
 //Return    : true - Thread created, false - thread creation failed
 //Notes     : None
 //*****************************************************************************
-bool POSSIXHandlerCreateThread(pthread_t* pulThread, void *(*pRoutine)(void*), 
-                               void* pArguments, const char* pcThreadName)
+bool PthreadCoreCreateThread(const THREAD_CONFIG* pstThreadConfig)
 {
     bool blReturn = true;
 
-    if((pulThread == NULL) || (pRoutine == NULL))
+    do 
     {
-        blReturn = false;
-    }
-
-    if(blReturn == true)
-    {
-        if(pthread_create(pulThread, NULL, pRoutine, pArguments) == SUCCESS_RETURN)
+        if (NULL == pstThreadConfig)
         {
-            printf(" %s Created Successfully  \r\n",pcThreadName);
+            blReturn = false;
+            printf("ERROR: Thread creation failed - Null pointer.\r\n");
+            break; 
+        }
+
+        if (pthread_create(pstThreadConfig->pulThreadId, NULL, 
+                        pstThreadConfig->ThreadHandler, NULL) != SUCCESS_RETURN)
+        {
+            printf("ERROR: %s Creation failed\r\n", pstThreadConfig->pcThreadName);
+            blReturn = false;
+            break;
         }
         else
         {
-            blReturn = false;
-            printf("ERROR: %s Creation failed\r\n",pcThreadName);
+            printf("%s Created Successfully\r\n", pstThreadConfig->pcThreadName);
         }
-    }
-    else
-    {
-        printf("ERROR: Invalid parameters in %s creation\r\n",pcThreadName);
-    }
+
+    } while (0);
 
     return blReturn;
 }
-//************************* POSSIXSynchronizeThreads **************************
-//Purpose    : Wrapper to synchronize a POSIX thread
+
+//************************* PthreadCoreSynchronizeThreads **********************
+//Purpose    : Synchronizes a POSIX thread
 //Inputs     : pulThread - pointer to the thread ID variable
 //             pcThreadName - name of the thread for logging purposes
 //Outputs    : None
-//Return     : 0 - Thread synchronized successfully, 
-//Notes      : This function blocks the caller until the target thread terminates.
+//Return     : true if thread synchronized successfully, false if 
+//             synchronization failed
+//Notes      : None
 //*****************************************************************************
-bool POSSIXSynchronizeThreads(pthread_t ulThread, const char* pcThreadName)
+bool PthreadCoreSynchronizeThreads(const THREAD_CONFIG* pstThreadConfig)
 {
-    bool blReturn = false;
-    int lReturnStatus = -1;
+    bool blReturn = true;
 
-    lReturnStatus = pthread_join(ulThread, NULL);
+    do 
+    {
+        if (NULL == pstThreadConfig)
+        {
+            printf("ERROR: Synchronization failed - Null configuration pointer.\r\n");
+            blReturn = false;
+            break; 
+        }
 
-    if(SUCCESS_RETURN == lReturnStatus)
-    {
-        blReturn = true;
-    }
-    else
-    {
-        printf("ERROR: %s Synchronized failed\r\n",pcThreadName);
-    }
+        if(pthread_join(*(pstThreadConfig->pulThreadId), NULL) != SUCCESS_RETURN)
+        {
+            printf("ERROR: %s Synchronization (Join) failed with status \r\n",
+                    pstThreadConfig->pcThreadName);
+            blReturn = false;
+            break;
+        }
+
+    } while (0);
     
     return blReturn;
 }
 
-
-//***************************** FindMessageQueue *******************************
-//Purpose   : Checks if a POSIX message queue exists in the kernel.
-//Inputs    : pcQueuename - The string name of the queue to search for
+//************************* PthreadCoreOpenQueue ******************************
+//Purpose   : Opens or creates a POSIX message queue
+//Inputs    : pcQueueName  - The string name of the queue
+//            lFlags       - Access modes
+//            ulPermission - Number representing octal permissions 
+//            pstAttr      - Pointer to mq_attr structure for queue configuration
 //Outputs   : None
-//Return    : true if the queue is found, false otherwise
-//Notes     : Attempts to open in O_RDONLY mode and closes the handle immediately.
-//******************************************************************************
-bool FindMessageQueue(const char* pcQueuename)
+//Return    : Valid queue descriptor on success, or MSG_QUEUE_ERR on failure
+//Notes     : None.
+//*****************************************************************************
+mqd_t PthreadCoreOpenQueue(const char* pcQueueName, int lFlags, 
+                            const uint32_t ulPermission, struct mq_attr* pstAttr)
 {
-    bool blStatus = true;
-    mqd_t lTempQueue = 0;
+    mqd_t lQueueDescriptor = MSG_QUEUE_ERR;
 
-    lTempQueue = mq_open(pcQueuename,O_RDONLY);
-
-    if(lTempQueue != MSG_QUEUE_ERR)
+    do 
     {
-        mq_close(lTempQueue);
-    }
-    else
-    {
-        blStatus = false;
-        printf(" %s does not exist.\r\n", pcQueuename);
-    }
+        if (NULL == pcQueueName || NULL == pstAttr)
+        {
+            printf("ERROR: mq_open failed - NULL Arguments.\r\n");
+            break; 
+        }
 
-    return blStatus;
+        lQueueDescriptor = mq_open(pcQueueName, lFlags, ulPermission, pstAttr);
 
+        if (MSG_QUEUE_ERR == lQueueDescriptor)
+        {
+            printf("ERROR: mq_open failed for queue: %s\r\n", pcQueueName);
+        }
+
+    } while (0);
+
+    return lQueueDescriptor;
 }
 
-//***************************** RemoveMessageQueue *****************************
-//Purpose   : Deletes a message queue from the system if it exists
-//Inputs    : pcQueuename - The string name of the queue
+//***************************** PthreadCoreMessageSend *************************
+//Purpose   : Sends a message through a POSIX queue .
+//Inputs    : lQueueDescriptor - The handle for the target message queue
+//            pMessage         - Pointer to the message data
+//            ulMsgSize        - Size of the message being sent
+//            ulPriority       - The priority level of the message
 //Outputs   : None
-//Return    : true if queue was found and removed, false if it didn't exist
+//Return    : true if message was sent successfully, false if message sent failed
 //Notes     : None
 //******************************************************************************
-bool RemoveMessageQueue(const char* pcQueuename)
+bool PthreadCoreMessageSend(mqd_t lQueueDescriptor, const void* pMessage, 
+                      uint32_t ulSize, uint32_t ulPriority)
 {
     bool blStatus = true;
-    int lReturnStatus = 0;
 
-    blStatus = FindMessageQueue(pcQueuename) ;
-
-    if(true == blStatus)
+    do 
     {
-        lReturnStatus = mq_unlink(pcQueuename);
-
-        if(lReturnStatus != MSG_QUEUE_ERR)
+        if (lQueueDescriptor == MSG_QUEUE_ERR || pMessage == NULL)
         {
-            printf(" %s removed successfully.\r\n", pcQueuename);
-        }
-        else
-        {
-            printf("ERROR: Failed to unlink %s.\r\n", pcQueuename);
+            printf("ERROR: Invalid Queue Descriptor or NULL Message Pointer.\n\r");
             blStatus = false;
+            break; 
         }
-    }
+
+        if (MSG_QUEUE_ERR == mq_send(lQueueDescriptor, (const char*)pMessage, 
+                                     ulSize, ulPriority))
+        {
+            printf("ERROR: Failed to send message to queue descriptor %d.\n\r", 
+                    lQueueDescriptor);
+            blStatus = false;
+            break;
+        }
+
+    } while (0);
 
     return blStatus;
 }
 
+//*********************** PthreadCoreMessageReceive ****************************
+//Purpose   : Receives a message from a POSIX message queue.
+//Inputs    : lQueueDescriptor - The handle of the target queue.
+//            pMessage         - Pointer to the buffer where data will be stored.
+//            ulSize           - Size of the message buffer in bytes.
+//            pulPriority      - Pointer to store the received message priority.
+//Outputs   : None
+//Return    : true if a message was received , false if message receive failed
+//Notes     : None
+//******************************************************************************
+bool PthreadCoreMessageReceive(mqd_t lQueueDescriptor, void* pMessage, 
+                               uint32_t ulSize, uint32_t* pulPriority)
+{
+    bool blReturn = true;
+
+    do 
+    {
+        if (NULL == pMessage || NULL == pulPriority)
+        {
+            printf("ERROR: Message queue receive failed - NULL pointer detected.\n\r");
+            blReturn = false;
+            break; 
+        }
+
+        if(MSG_QUEUE_ERR == mq_receive(lQueueDescriptor, (char*)pMessage, ulSize, 
+                                                                    pulPriority))
+        {
+            printf("ERROR: mq_receive failed for descriptor %d.\n\r", lQueueDescriptor);
+            blReturn = false;
+            break;
+        }
+
+    } while (0);
+
+    return blReturn;
+}
+
+//*************************** PthreadCoreSemInit *******************************
+//Purpose   : Initializes a POSIX semaphore 
+//Inputs    : pstSem - Pointer to a SEM_CREATE structure 
+//Outputs   : None
+//Return    : true if the semaphore was successfully initialized , false if 
+//            semaphore initialisation fails.
+//Notes     : None
+//******************************************************************************
+bool PthreadCoreSemInit(const SEM_CREATE* pstSem)
+{
+    bool blReturn = true;
+
+    do 
+    {
+        if (NULL == pstSem)
+        {
+            printf("ERROR: Semaphore initialization failed - Null pointer.\n");
+            blReturn = false;
+            break; 
+        }
+
+        if (sem_init(pstSem->pSemId, 0, pstSem->ulInitialVal) != THREAD_SUCCESS)
+        {
+            printf("ERROR: Failed to initialize semaphore: %s\n", pstSem->pcSemName);
+            blReturn = false;
+            break;
+        }
+
+    } while (0);
+
+    return blReturn;
+}
+
+//*************************** PthreadCoreSemPost *******************************
+//Purpose   : Posts a POSIX semaphore.
+//Inputs    : pSemId - Pointer to the semaphore object to be posted.
+//Outputs   : None
+//Return    : true if the semaphore was successfully posted; 
+//            false if semaphore post fails.
+//Notes     : None.
+//******************************************************************************
+bool PthreadCoreSemPost(sem_t* pSemId)
+{
+    bool blReturn = true;
+
+    do 
+    {
+        if (NULL == pSemId)
+        {
+            printf("ERROR: Semaphore post failed - Null pointer.\n");
+            blReturn = false;
+            break; 
+        }
+
+        if (sem_post(pSemId) != THREAD_SUCCESS)
+        { 
+            printf("ERROR: Semaphore post failed (Descriptor: %p)\n", (void*)pSemId);
+            blReturn = false;
+            break;
+        }
+
+    } while (0);
+
+    return blReturn;
+}
+
+//*************************** PthreadCoreSemWait *******************************
+//Purpose   : Waits a POSIX semaphore.
+//Inputs    : pSemId - Pointer to the semaphore object.
+//Outputs   : None
+//Return    : true if the semaphore was successfully locked; 
+//            false if the pointer is NULL or sem_wait fails.
+//Notes     : None
+//******************************************************************************
+bool PthreadCoreSemWait(sem_t* pSemId)
+{
+    bool blReturn = true;
+
+    do
+    {
+        if (NULL == pSemId)
+        {
+            printf("ERROR: Semaphore wait failed - Null pointer.\n");
+            blReturn = false;
+            break; 
+        }
+
+        if (sem_wait(pSemId) != THREAD_SUCCESS)
+        { 
+            printf("ERROR: Semaphore wait failed (Descriptor: %p)\n", (void*)pSemId);
+            blReturn = false;
+            break;
+        }
+
+    } while (0);
+
+    return blReturn;
+}
