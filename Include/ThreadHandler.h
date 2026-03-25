@@ -4,8 +4,8 @@
 //*****************************************************************************
 //
 // File     : ThreadHandler.h
-// Summary  : 
-// Note     : 
+// Summary  : Function declaration of callback functions in ThreadHandler.c
+// Note     : None
 // Author   : Shani 
 // Date     : Mar 12, 2026 
 //
