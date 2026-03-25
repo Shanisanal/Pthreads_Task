@@ -13,7 +13,7 @@
 
 //******************************* Include Files *******************************
 #include "Common.h"
-#include "PossixHandler.h"
+#include "PosixHandler.h"
 #include "ThreadHandler.h"
 
 //******************************* Local Types ********************************* 
@@ -36,7 +36,7 @@ int main()
     int lReturnCode = 0;
     bool blStatus = true;
 
-    blStatus = ExecuteThreads();
+    blStatus = ThreadHandlerRun();
 
     if(false == blStatus)
     {
