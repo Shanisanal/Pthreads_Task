@@ -41,7 +41,7 @@ static bool ThreadHandlerFormatInit(void);
 //Purpose   : Initializes and starts the system threads
 //Inputs    : None
 //Outputs   : None
-//Return    : true if the thread system started and synchronized successfully, 
+//Return    : true if the thread are started and synchronized successfully, 
 //            false otherwise.
 //Notes     : None.
 //******************************************************************************
@@ -66,7 +66,12 @@ bool ThreadHandlerRun(void)
             printf("ERROR: Failed to create system threads.\n");
             blStatus = false;
         }
+    } 
+    else
+    {
+        printf("Semaphore failed \n\r");
     }
+
  
     return blStatus;
 }
@@ -99,6 +104,13 @@ bool ThreadHandlerValidateInput(uint8_t* pucBuffer, long* plInputValue)
         {
             printf("ERROR: Invalid input '%s' - Not a numeric value.\n\r", pucBuffer);
             printf("Enter a number (0-65536):\n\r");
+            blStatus = false;
+            break;
+        }
+
+        if (*pcEndPtr == '.')
+        {
+            printf("ERROR: Enter integer values (0-65536).\n\r");
             blStatus = false;
             break;
         }
