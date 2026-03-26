@@ -83,8 +83,7 @@ bool PthreadCoreSynchronizeThreads(const THREAD_CONFIG* pstThreadConfig)
 
         if(pthread_join(*(pstThreadConfig->pulThreadId), NULL) != SUCCESS_RETURN)
         {
-            printf("ERROR: %s Synchronization (Join) failed with status \r\n",
-                    pstThreadConfig->pcThreadName);
+            printf("ERROR: %s Synchronization failed \r\n", pstThreadConfig->pcThreadName);
             blReturn = false;
             break;
         }
