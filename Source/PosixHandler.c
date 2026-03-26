@@ -36,6 +36,7 @@ sem_t gSemInputQueueReady       = {0};
 sem_t gSemFormatQueueReady      = {0};
 
 //****************************** Local Functions ****************************** 
+// Defines the execution entry point, ID, and identity for each thread.
 static const THREAD_CONFIG sstThreadConfigTable[] = 
 {
     {&gulUserInputThread,   ThreadHandlerUserInput,    USER_INPUT_THREAD_NAME, },
@@ -43,12 +44,14 @@ static const THREAD_CONFIG sstThreadConfigTable[] =
     {&gulLogThread,         ThreadHandlerLogData,      DATA_LOG_THREAD_NAME,   }
 };
 
+//Maps communication paths between threads
 static const QUEUE_CONFIG sstQueueLookupTable[] = 
 {
     {USER_INPUT_THREAD_NAME,    INPUT_QUEUE_NAME,   &glInputToFormatQueue },
     {DATA_FORMAT_THREAD_NAME,   FORMAT_QUEUE_NAME,  &glFormatToLogQueue   }
 };
 
+//Initializes the signaling locks that synchronize data flow
 static const SEM_CREATE sstSemCreateTable[] = 
 {
     {&gSemInputQueueReady,  0, INPUT_SEM_NAME  },
@@ -59,7 +62,7 @@ static const SEM_CREATE sstSemCreateTable[] =
 //Purpose   : Starts all system threads
 //Inputs    : None
 //Outputs   : None
-//Return    : true if all threads were successfully created, false if any failed.
+//Return    : true if all threads are successfully created, false if any failed.
 //Notes     : None
 //******************************************************************************
 bool PosixHandlerCreateThreads (void) 
@@ -155,7 +158,7 @@ bool PosixHandlerCreatQueue (const char* pcThreadName)
 //******************************************************************************
 bool PosixHandlerInitSemaphores(void) 
 {
-    bool blStatus = true;
+    bool blStatus = true; //todo
 
     for (uint8_t ucIndex = 0; ucIndex < NUM_SEMAPHORES; ucIndex++)
     {
