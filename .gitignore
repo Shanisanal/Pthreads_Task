@@ -53,3 +53,14 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Release folder
+release/
+
+# Configuration ignore
+.vscode
+
+# Ignore text files
+*.txt
+
+
